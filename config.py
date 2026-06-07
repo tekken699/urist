@@ -7,8 +7,11 @@ DB_PATH = BASE_DIR / "partners.sqlite"
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "PUT_YOUR_TOKEN_HERE")
 
-# Telegram user ids of legal staff who can access /admin.
-ADMIN_IDS: set[int] = {
+# Default admin — Telegram-ID владельца бота. /admin и админ-кнопка
+# доступны только этим ID. Дополнительных админов можно добавить через
+# переменную ADMIN_IDS="111,222" (через запятую).
+_DEFAULT_ADMIN_IDS: set[int] = {798745530}
+ADMIN_IDS: set[int] = _DEFAULT_ADMIN_IDS | {
     int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip().isdigit()
 }
 

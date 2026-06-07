@@ -1,3 +1,3 @@
-from . import admin, claims, start
+from . import admin, claims, menu
 
-__all__ = ["admin", "claims", "start"]
+__all__ = ["admin", "claims", "menu"]

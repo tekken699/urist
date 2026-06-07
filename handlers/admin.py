@@ -21,6 +21,7 @@ from keyboards import (
     admin_partners_kb,
     confirm_delete_kb,
     edit_fields_kb,
+    main_menu_kb,
     partner_card_kb,
 )
 from states import AddPartner, EditPartner
@@ -41,18 +42,6 @@ async def cmd_admin(message: Message, state: FSMContext) -> None:
     await message.answer("🛠 Админ-панель:", reply_markup=admin_menu_kb())
 
 
-@router.message(Command("addpartner"))
-async def cmd_add_partner_open(message: Message, state: FSMContext) -> None:
-    """Открытая команда — любой юрист может добавить партнёра в базу.
-
-    Удаление/редактирование/дамп БД остаются за админами (см. /admin).
-    """
-    await state.clear()
-    await state.set_state(AddPartner.name)
-    await message.answer(
-        "Добавление партнёра.\n\n"
-        f"1/9. {PARTNER_FIELD_LABELS['name']}:"
-    )
 
 
 @router.callback_query(F.data == "adm:menu")
@@ -249,11 +238,9 @@ async def _handle_add_step(
         payload = {f: data[f] for f in PARTNER_FIELDS}
         pid = await add_partner(payload)
         await state.clear()
-        kb = admin_menu_kb() if is_admin(message.from_user.id) else None
         await message.answer(
-            f"✅ Партнёр <b>{payload['name']}</b> добавлен (id={pid}).\n"
-            "/start — оформить претензию.",
-            reply_markup=kb,
+            f"✅ Партнёр <b>{payload['name']}</b> добавлен в базу (id={pid}).",
+            reply_markup=main_menu_kb(is_admin(message.from_user.id)),
         )
         return
     await state.set_state(next_state)

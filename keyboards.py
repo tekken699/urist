@@ -1,10 +1,40 @@
 from math import ceil
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import CLAIM_TYPES, MAX_EMPTY_PHOTOS, PARTNERS_PAGE_SIZE
 from database import Partner, count_partners, list_partners
+
+# Текст reply-кнопок главного меню. Используется и в keyboards.py, и в handlers/menu.py.
+MAIN_BTN_NEW_CLAIM = "📝 Создать претензию"
+MAIN_BTN_ADD_PARTNER = "➕ Добавить партнёра"
+MAIN_BTN_HELP = "❓ Помощь"
+MAIN_BTN_ADMIN = "🛠 Админ-панель"
+
+
+def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
+    """Главное меню — постоянная reply-клавиатура снизу экрана."""
+    rows = [
+        [KeyboardButton(text=MAIN_BTN_NEW_CLAIM)],
+        [
+            KeyboardButton(text=MAIN_BTN_ADD_PARTNER),
+            KeyboardButton(text=MAIN_BTN_HELP),
+        ],
+    ]
+    if is_admin:
+        rows.append([KeyboardButton(text=MAIN_BTN_ADMIN)])
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True,
+        is_persistent=True,
+        input_field_placeholder="Выберите действие…",
+    )
 
 
 def claim_types_kb() -> InlineKeyboardMarkup:

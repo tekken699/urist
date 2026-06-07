@@ -7,9 +7,9 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message, User
 from docx.shared import Mm
 from docxtpl import DocxTemplate, InlineImage
 
-from config import CLAIM_TYPES, MAX_EMPTY_PHOTOS, TEMPLATES_DIR, TEMPLATE_FOR_TYPE
+from config import ADMIN_IDS, CLAIM_TYPES, MAX_EMPTY_PHOTOS, TEMPLATES_DIR, TEMPLATE_FOR_TYPE
 from database import get_partner
-from keyboards import claim_types_kb, partners_kb, photos_kb
+from keyboards import claim_types_kb, main_menu_kb, partners_kb, photos_kb
 from states import ClaimFlow
 from utils import calc_deadline, format_ru_date, normalize_violations, parse_ru_date
 
@@ -98,7 +98,7 @@ async def cb_pick_partner(cb: CallbackQuery, state: FSMContext) -> None:
         f"Партнёр: <b>{partner.name}</b>\n"
         f"Тип: <b>{CLAIM_TYPES[code]}</b>\n\n"
         "Введите <b>адрес пекарни</b>, где зафиксированы нарушения "
-        "(например: «г. Санкт-Петербург, ул. Восстания, д. 8»):"
+        "(например: «г. Санкт-Петербург, ул. Садовая, д. 36»):"
     )
     await cb.answer()
 
@@ -150,7 +150,9 @@ async def msg_violations(message: Message, state: FSMContext) -> None:
         )
         return
 
-    await _render_and_send(message, state, message.bot, message.chat.id)
+    await _render_and_send(
+        message, state, message.bot, message.chat.id, message.from_user.id,
+    )
 
 
 # ---- Сбор фото для "Пустые витрины" -----------------------------------------
@@ -189,7 +191,9 @@ async def cb_photos_done(cb: CallbackQuery, state: FSMContext) -> None:
         await cb.message.edit_reply_markup(reply_markup=None)
     except Exception:
         pass
-    await _render_and_send(cb.message, state, cb.bot, cb.message.chat.id)
+    await _render_and_send(
+        cb.message, state, cb.bot, cb.message.chat.id, cb.from_user.id,
+    )
     await cb.answer()
 
 
@@ -200,6 +204,7 @@ async def _render_and_send(
     state: FSMContext,
     bot: Bot,
     chat_id: int,
+    user_id: int,
 ) -> None:
     data = await state.get_data()
     partner = await get_partner(data["partner_id"])
@@ -236,6 +241,7 @@ async def _render_and_send(
         await bot.send_message(
             chat_id,
             f"❗ Шаблон {tpl_path.name} не найден.\n"
+            f"Запустите: python create_templates.py",
         )
         return
 
@@ -280,4 +286,8 @@ async def _render_and_send(
         caption=caption,
     )
     await state.clear()
-    await bot.send_message(chat_id, "Готово. /start — оформить ещё одну.")
+    await bot.send_message(
+        chat_id,
+        "Готово ✅ Выберите следующее действие на клавиатуре.",
+        reply_markup=main_menu_kb(user_id in ADMIN_IDS),
+    )

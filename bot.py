@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import BOT_TOKEN
 from database import init_db
-from handlers import admin, claims, start
+from handlers import admin, claims, menu
 
 
 async def main() -> None:
@@ -29,7 +29,9 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=MemoryStorage())
-    dp.include_router(start.router)
+    # menu подключается первым — иначе reply-кнопки не будут перехватываться
+    # в активных FSM-состояниях (admin/claims).
+    dp.include_router(menu.router)
     dp.include_router(admin.router)
     dp.include_router(claims.router)
 
